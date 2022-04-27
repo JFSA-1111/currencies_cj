@@ -1,0 +1,41 @@
+version: '3'
+
+volumes:
+  testing_local_postgres_data: {}
+  testing_local_postgres_data_backups: {}
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: ./compose/local/fastapi/Dockerfile
+    image: testing_local_fastapi
+    container_name: testing_local_fastapi
+    platform: linux/x86_64
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.environments/.local/.env
+      - ./.environments/.local/.postgres
+    ports:
+      - "8000:8000"
+    stdin_open: true
+    tty: true
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: testing_production_postgres
+    container_name: testing_local_postgres
+    volumes:
+      - testing_local_postgres_data:/var/lib/postgresql/data:Z
+      - testing_local_postgres_data_backups:/backups:z
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ./.environments/.local/.postgres
+    ports:
+      - "5432:5432"
